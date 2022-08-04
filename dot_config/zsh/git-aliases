@@ -1,0 +1,141 @@
+# Extracted relevant aliases from omz
+
+# Check if main exists and use instead of master
+function git_main_branch() {
+  command git rev-parse --git-dir &>/dev/null || return
+  local ref
+  for ref in refs/{heads,remotes/{origin,upstream}}/{main,trunk}; do
+    if command git show-ref -q --verify $ref; then
+      echo ${ref:t}
+      return
+    fi
+  done
+  echo master
+}
+
+# Check for develop and similarly named branches
+function git_develop_branch() {
+  command git rev-parse --git-dir &>/dev/null || return
+  local branch
+  for branch in dev devel development; do
+    if command git show-ref -q --verify refs/heads/$branch; then
+      echo $branch
+      return
+    fi
+  done
+  echo develop
+}
+
+alias g="git"
+
+alias ga="git add"
+alias gapa="git add --patch"
+
+alias gap="git apply"
+alias gapt="git apply --3way"
+
+alias gb="git branch"
+alias gbd="git branch -d"
+alias gbda='git branch --no-color --merged | grep -vE "^([+]|\s($(git_main_branch)|$(git_develop_branch))\s*$)" | xargs git branch -d 2>/dev/null'
+alias gbD="git branch -D"
+alias gbnm="git branch --no-merged"
+alias gbr="git branch --remote"
+alias gcb="git checkout -b"
+
+alias gbs="git bisect"
+alias gbsb="git bisect bad"
+alias gbsg="git bisect good"
+alias gbsr="git bisect reset"
+alias gbss="git bisect start"
+
+alias gc="git commit -v"
+alias gca="git commit -v --amend"
+alias gcan="git commit --no-edit --amend"
+alias gcmsg="git commit -m"
+
+alias gcf="git config --list"
+alias gcl="git clone --recurse-submodules"
+alias gccd='git clone --recurse-submodules "$@" && cd "$(basename $_ .git)"'
+
+alias gcm="git checkout $(git_main_branch)"
+alias gcd="git checkout $(git_develop_branch)"
+alias gco="git checkout"
+alias gcor="git checkout --recurse-submodules"
+
+alias gcp="git cherry-pick"
+alias gcpa="git cherry-pick --abort"
+alias gcpc="git cherry-pick --continue"
+
+alias gd="git diff"
+alias gdca="git diff --cached"
+alias gdcw="git diff --cached --word-diff"
+alias gds="git diff --staged"
+alias gdt="git diff-tree --no-commit-id --name-only -r"
+
+alias gf="git fetch"
+alias gfa="git fetch --all --prune"
+
+alias gl="git pull"
+alias glr="git pull --rebase"
+
+alias glg="git log --stat"
+alias glgp="git log --stat -p"
+alias glgg="git log --graph"
+alias glgga="git log --graph --decorate --all"
+alias glgm="git log --graph --max-count=10"
+alias glo="git log --oneline --decorate"
+alias glol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset'"
+alias glols="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset' --stat"
+alias glod="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset'"
+alias glods="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset' --date=short"
+alias glola="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset' --all"
+alias glog="git log --oneline --decorate --graph"
+alias gloga="git log --oneline --decorate --graph --all"
+
+alias gm="git merge"
+alias gma="git merge --abort"
+
+alias gp="git push"
+alias gpd="git push --dry-run"
+alias gpf="git push --force-with-lease"
+
+alias gpu="git push upstream"
+alias gpv="git push -v"
+
+alias gr="git remote"
+alias gra="git remote add"
+alias grset="git remote set-url"
+alias grv="git remote -v"
+
+alias grb="git rebase"
+alias grba="git rebase --abort"
+alias grbc="git rebase --continue"
+alias grbd="git rebase $(git_develop_branch)"
+alias grbi="git rebase -i"
+alias grbo="git rebase --onto"
+alias grbs="git rebase --skip"
+
+alias grs="git reset"
+alias grsh="git reset --hard"
+
+alias grm="git rm"
+alias grmc="git rm --cached"
+
+alias gst="git status"
+
+alias gsta="git stash push"
+alias gsta="git stash save"
+alias gstaa="git stash apply"
+alias gstc="git stash clear"
+alias gstd="git stash drop"
+alias gstl="git stash list"
+alias gstp="git stash pop"
+alias gsts="git stash show --text"
+alias gstu="git stash --include-untracked"
+alias gstall="git stash --all"
+
+alias gam="git am"
+alias gamc="git am --continue"
+alias gams="git am --skip"
+alias gama="git am --abort"
+alias gamscp="git am --show-current-patch"

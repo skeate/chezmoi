@@ -1,0 +1,202 @@
+# vim:fdm=marker:fmr=<<<,>>>:ft=zsh
+# .zshrc
+# Created by Jonathan Skeate
+
+# Plugin helper funcs <<<
+setopt PUSHDSILENT
+
+src() {
+  source "$2/$1"
+}
+
+use() {
+  local dir="$XDG_DATA_HOME/zsh/$1"
+  if [[ ! -d $dir ]];
+  then
+    echo "Installing $1..."
+    mkdir -p $dir
+    pushd $dir
+    git clone "https://github.com/$1.git" .
+    popd
+  else
+    pushd $dir
+    git pull --quiet
+    popd
+  fi
+
+  if [ "$#" -gt 1 ];
+  then
+    "${@:2}" $dir
+  fi
+}
+#>>>
+
+# Plugins <<<
+
+# nicer vi mode
+patch_vi_mode() {
+  echo "CHECK HERE TO SEE IF patch_vi_mode CAN BE REMOVED"
+  echo "https://github.com/jeffreytse/zsh-vi-mode/pull/188"
+  pushd $2
+  local patch="
+diff --git a/zsh-vi-mode.zsh b/zsh-vi-mode.zsh
+index c8cce0b..abea50f 100644
+--- a/zsh-vi-mode.zsh
++++ b/zsh-vi-mode.zsh
+@@ -3253,7 +3253,8 @@ function zvm_init() {
+   zvm_define_widget zvm_switch_keyword
+ 
+   # Override standard widgets
+-  zvm_define_widget zle-line-pre-redraw zvm_zle-line-pre-redraw
++  autoload add-zle-hook-widget
++  add-zle-hook-widget zle-line-pre-redraw zvm_zle-line-pre-redraw
+ 
+   # Ensure the correct cursor style when an interactive program
+   # (e.g. vim, bash, etc.) starts and exits"
+  echo $patch | git apply
+  popd
+  source "$2/$1"
+}
+# use "jeffreytse/zsh-vi-mode" src "zsh-vi-mode.plugin.zsh"
+use "jeffreytse/zsh-vi-mode" patch_vi_mode "zsh-vi-mode.plugin.zsh"
+
+# general collection of better completions
+appendToFpath() {
+  fpath=("$1" $fpath)
+}
+use "zsh-users/zsh-completions" appendToFpath
+
+# nvm lazy loading
+export NVM_DIR="$XDG_DATA_HOME/nvm"
+export NVM_COMPLETION=true
+export NVM_LAZY_LOAD=true
+export NVM_LAZY_LOAD_EXTRA_COMMANDS=('nvim')
+use "lukechilds/zsh-nvm" src "zsh-nvm.plugin.zsh"
+
+# add sudo with <esc><esc>
+use "ohmyzsh/ohmyzsh" src "plugins/sudo/sudo.plugin.zsh"
+
+#   OMZP::tmux `#aliases` \
+#   lukechilds/zsh-nvm `#nvm loader`
+#
+# >>>
+
+# Misc Settings <<<
+
+export PATH="$HOME/.local/bin:$HOME/.local/lib/nodejs/bin:$GEM_HOME/bin:$PATH"
+
+# ls colors
+autoload -U colors && colors
+export LSCOLORS="Gxfxcxdxbxegedabagacad"
+
+setopt extendedglob
+
+# enable history up/down matching
+# autoload -U history-search-end
+# bindkey "^[[A" history-beginning-search-backward
+# bindkey "^[[B" history-beginning-search-forward
+
+sourceIfExists() {
+  [ -s $1 ] && . $1
+}
+
+# python virtualenvwrapper
+mkdir -p $XDG_DATA_HOME/virtualenvs
+export WORKON_HOME=$XDG_DATA_HOME/virtualenvs
+export PROJECT_HOME=$HOME/Code
+sourceIfExists /usr/bin/virtualenvwrapper.sh
+
+# Autoload neovim session if one exists
+function nvim() {
+  if test $# -gt 0; then
+    env nvim "$@"
+  elif test -f Session.vim; then
+    env nvim -S
+  else
+    env nvim
+  fi
+}
+
+# >>>
+
+# Aliases <<<
+
+sourceIfExists $XDG_CONFIG_HOME/zsh/aliases
+sourceIfExists $XDG_CONFIG_HOME/zsh/git-aliases
+
+# >>>
+
+# prompt <<<
+if hash starship 2> /dev/null
+then
+  eval "$(starship init zsh)"
+else
+  echo "Installing starship..."
+  curl -sS https://starship.rs/install.sh | sh
+fi
+
+# >>>
+
+# omz extractions <<<
+
+# history.zsh <<<
+
+## History file configuration
+[ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
+[ "$HISTSIZE" -lt 50000 ] && HISTSIZE=50000
+[ "$SAVEHIST" -lt 10000 ] && SAVEHIST=10000
+
+## History command configuration
+setopt extended_history       # record timestamp of command in HISTFILE
+setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
+setopt hist_ignore_dups       # ignore duplicated commands history list
+setopt hist_ignore_space      # ignore commands that start with space
+setopt hist_verify            # show command with history expansion to user before running it
+setopt share_history          # share command history data
+
+# >>>
+
+# key-bindings.zsh <<<
+
+# [PageUp] - Up a line of history
+if [[ -n "${terminfo[kpp]}" ]]; then
+  bindkey -M emacs "${terminfo[kpp]}" up-line-or-history
+  bindkey -M viins "${terminfo[kpp]}" up-line-or-history
+  bindkey -M vicmd "${terminfo[kpp]}" up-line-or-history
+fi
+# [PageDown] - Down a line of history
+if [[ -n "${terminfo[knp]}" ]]; then
+  bindkey -M emacs "${terminfo[knp]}" down-line-or-history
+  bindkey -M viins "${terminfo[knp]}" down-line-or-history
+  bindkey -M vicmd "${terminfo[knp]}" down-line-or-history
+fi
+
+# Start typing + [Up-Arrow] - fuzzy find history forward
+if [[ -n "${terminfo[kcuu1]}" ]]; then
+  autoload -U up-line-or-beginning-search
+  zle -N up-line-or-beginning-search
+
+  bindkey -M emacs "${terminfo[kcuu1]}" up-line-or-beginning-search
+  bindkey -M viins "${terminfo[kcuu1]}" up-line-or-beginning-search
+  bindkey -M vicmd "${terminfo[kcuu1]}" up-line-or-beginning-search
+fi
+# Start typing + [Down-Arrow] - fuzzy find history backward
+if [[ -n "${terminfo[kcud1]}" ]]; then
+  autoload -U down-line-or-beginning-search
+  zle -N down-line-or-beginning-search
+
+  bindkey -M emacs "${terminfo[kcud1]}" down-line-or-beginning-search
+  bindkey -M viins "${terminfo[kcud1]}" down-line-or-beginning-search
+  bindkey -M vicmd "${terminfo[kcud1]}" down-line-or-beginning-search
+fi
+
+# >>>
+
+# >>>
+
+# syntax highlighting <<<
+
+# must be last, allegedly.
+use "zsh-users/zsh-syntax-highlighting" src "zsh-syntax-highlighting.zsh"
+
+# >>>

@@ -1,0 +1,47 @@
+#!/bin/zsh
+# vim:ft=zsh:fdm=marker:fmr=<<<,>>>
+
+# tmux <<<
+
+alias tmux='tmux -f $XDG_CONFIG_HOME/tmux/tmux.conf'
+
+alias ta='tmux attach -t'
+alias ts='tmux new-session -s'
+alias tl='tmux list-sessions'
+
+# >>>
+
+# pbcopy/paste <<<
+{{ if eq .chezmoi.os "linux" }}
+alias pbcopy='xsel --clipboard --input'
+alias pbpaste='xsel --clipboard --output'
+{{ end }}
+# >>>
+
+# purescript helpers <<<
+map()
+{
+  local program=$1
+  shift
+  for arg in $@
+  do
+    eval $program $arg
+  done
+}
+
+alias pinit='psc-package init'
+alias pi='map "psc-package install"'
+alias psrepl='pushd $(mktemp -d)\
+  && tmux new-session \; \
+      split-window -h -l 80 \; \
+      select-pane -t 0 \; \
+      send-keys "spago init && spago install psci-support && spago repl && tmux kill-session && popd" C-m \;'
+
+# >>>
+
+# directory stuff <<<
+alias l='ls -lah --color'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+# >>>
