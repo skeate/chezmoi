@@ -1,3 +1,5 @@
+# vim:fdm=marker:fmr=<<<,>>>:ft=zsh
+
 export XDG_CONFIG_HOME="$HOME/.config"
 export  XDG_CACHE_HOME="$HOME/.cache"
 export   XDG_DATA_HOME="$HOME/.local/share"
@@ -33,3 +35,7 @@ export QMK_HOME=/home/skeate/Code/qmk_firmware
 {{ end }}
 
 export PATH="$PATH:$NVM_DIR"
+
+# tell less to display raw control characters
+# fixes diff colors on `chezmoi diff`, for example.
+export LESS=-R
